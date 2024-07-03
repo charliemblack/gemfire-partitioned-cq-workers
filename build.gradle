@@ -1,0 +1,61 @@
+apply plugin: 'java'
+apply plugin: 'application'
+
+dependencies {
+    repositories {
+        mavenCentral()
+        mavenLocal()
+        maven {
+            credentials {
+                username "$mavenUser"
+                password "$mavenPassword"
+            }
+            url "https://commercial-repo.pivotal.io/data3/gemfire-release-repo/gemfire"
+        }
+    }
+    implementation "com.vmware.gemfire:gemfire-core:10.1.0"
+    implementation "com.vmware.gemfire:gemfire-logging:10.1.0"
+    implementation "com.vmware.gemfire:gemfire-cq:10.1.0"
+    implementation 'org.apache.logging.log4j:log4j-api:2.22.1'
+    implementation 'org.apache.logging.log4j:log4j-core:2.22.1'
+    implementation "io.codearte.jfairy:jfairy:0.5.9"
+    implementation "info.picocli:picocli:4.7.6"
+    compileOnly "org.projectlombok:lombok:1.18.32"
+    implementation 'org.slf4j:slf4j-api:1.7.36'
+    implementation 'org.slf4j:slf4j-log4j12:1.7.36'
+    annotationProcessor 'org.projectlombok:lombok:1.18.32'
+
+
+}
+
+task runCqWorker1(type: JavaExec) {
+    mainClass = 'dev.gemfire.cqworker.CqWorker'
+    classpath = sourceSets.main.runtimeClasspath
+    args = ['--worker=0', '--partitions=2']
+}
+
+task runCqWorker2(type: JavaExec) {
+    mainClass = 'dev.gemfire.cqworker.CqWorker'
+    classpath = sourceSets.main.runtimeClasspath
+    args = ['--worker=1', '--partitions=2']
+}
+task runDataLoader(type: JavaExec) {
+    mainClass = 'dev.gemfire.cqworker.DataLoader'
+    classpath = sourceSets.main.runtimeClasspath
+    args = ['--worker=1', '--partitions=2']
+}
+ext {
+    javaMainClass = "dev.gemfire.Main"
+}
+
+application {
+    mainClassName = javaMainClass
+}
+tasks.withType(JavaExec) {
+    jvmArgs += [
+            '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
+            '--add-opens', 'java.base/java.lang.reflect=ALL-UNNAMED',
+            '--add-opens', 'java.base/sun.reflect.generics.reflectiveObjects=ALL-UNNAMED',
+            '--add-opens', 'java.base/sun.reflect.generics.factory=ALL-UNNAMED'
+    ]
+}
